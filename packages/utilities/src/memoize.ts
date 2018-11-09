@@ -107,20 +107,30 @@ export function memoizeFunction<T extends (...args: any[]) => RET_TYPE, RET_TYPE
     // Traverse the tree until we find the match.
     for (let i = 0; i < args.length; i++) {
       let arg = _normalizeArg(args[i]);
+      if (currentNode) {
+        if (!currentNode.map.has(arg)) {
+          currentNode.map.set(arg, _createNode());
+        }
 
-      if (!currentNode.map.has(arg)) {
-        currentNode.map.set(arg, _createNode());
+        currentNode = currentNode.map.get(arg);
+      }
+    }
+
+    if (currentNode) {
+      if (!currentNode.hasOwnProperty('value')) {
+        currentNode.value = cb(...args);
+        cacheSize++;
       }
 
-      currentNode = currentNode.map.get(arg);
-    }
+      return currentNode.value;
+    } else {
+      if (!rootNode.hasOwnProperty('value')) {
+        rootNode.value = cb(...args);
+        cacheSize++;
+      }
 
-    if (!currentNode.hasOwnProperty('value')) {
-      currentNode.value = cb(...args);
-      cacheSize++;
+      return rootNode.value;
     }
-
-    return currentNode.value;
   } as any;
 }
 
